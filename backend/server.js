@@ -3,6 +3,8 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+import serverless from "serverless-http";
+
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import pantryRoutes from "./routes/pantry.js";
@@ -54,4 +56,4 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-export default app;
+export default serverless(app);
