@@ -46,9 +46,12 @@ app.use("/api/recipes", recipeRoutes);
 app.use("/api/meal-plan", mealPlanRoutes); // ✅ fixed: meal-plans → meal-plan
 app.use("/api/shopping-list", shoppingListRoutes);
 
-const PORT = process.env.PORT || 8000;
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 8000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
-});
+export default app;
