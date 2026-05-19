@@ -9,7 +9,7 @@ import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import pantryRoutes from "./routes/pantry.js";
 import recipeRoutes from "./routes/recipes.js";
-import mealPlanRoutes from "./routes/mealplans.js";
+import mealPlanRoutes from "./routes/mealPlan.js";
 import shoppingListRoutes from "./routes/shoppingList.js";
 
 const app = express();
