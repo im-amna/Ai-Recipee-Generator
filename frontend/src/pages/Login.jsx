@@ -8,29 +8,25 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, loginDemo } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-
         const result = await login(email, password);
-
         if (result.success) {
             toast.success('Welcome back!');
             navigate('/dashboard');
         } else {
             toast.error(result.message);
         }
-
         setLoading(false);
     };
 
     return (
         <div className="min-h-screen bg-linear-to-br from-emerald-50 to-white flex items-center justify-center p-4">
             <div className="w-full max-w-md">
-                {/* Logo */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-500 rounded-2xl mb-4">
                         <ChefHat className="w-9 h-9 text-white" />
@@ -39,10 +35,8 @@ const Login = () => {
                     <p className="text-gray-600 mt-2">Sign in to continue to AI Recipe Generator</p>
                 </div>
 
-                {/* Login Form */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
                     <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Email */}
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                                 Email
@@ -61,7 +55,6 @@ const Login = () => {
                             </div>
                         </div>
 
-                        {/* Password */}
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                                 Password
@@ -80,14 +73,12 @@ const Login = () => {
                             </div>
                         </div>
 
-                        {/* Forgot Password */}
                         <div className="flex items-center justify-end">
                             <Link to="/reset-password" className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
                                 Forgot password?
                             </Link>
                         </div>
 
-                        {/* Submit Button */}
                         <button
                             type="submit"
                             disabled={loading}
@@ -95,9 +86,25 @@ const Login = () => {
                         >
                             {loading ? 'Signing in...' : 'Sign In'}
                         </button>
+
+                        <div className="relative my-4">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-200" />
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="bg-white px-3 text-gray-400">or</span>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => { loginDemo(); navigate('/dashboard'); }}
+                            className="w-full border border-emerald-500 text-emerald-600 hover:bg-emerald-50 font-medium py-2.5 rounded-lg transition-colors"
+                        >
+                            Try Demo — No signup needed
+                        </button>
                     </form>
 
-                    {/* Sign Up Link */}
                     <p className="text-center text-sm text-gray-600 mt-6">
                         Don't have an account?{' '}
                         <Link to="/signup" className="text-emerald-600 hover:text-emerald-700 font-medium">
