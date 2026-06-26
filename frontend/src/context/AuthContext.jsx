@@ -11,30 +11,47 @@ export const useAuth = () => {
   return context;
 };
 
+const DEMO_USER = {
+  id: 'demo',
+  name: 'Demo User',
+  email: 'demo@kitchen.ai',
+  isDemo: true
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
-    // check if user is logged in
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
+    const demoMode = localStorage.getItem('demoMode');
 
-    if (token && savedUser) {
+    if (demoMode === 'true') {
+      setUser(DEMO_USER);
+      setIsDemo(true);
+    } else if (token && savedUser) {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
   }, []);
 
+  const loginDemo = () => {
+    localStorage.setItem('demoMode', 'true');
+    localStorage.setItem('user', JSON.stringify(DEMO_USER));
+    setUser(DEMO_USER);
+    setIsDemo(true);
+    return { success: true };
+  };
+
   const login = async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
       const { user, token } = response.data.data;
-
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
-
       return { success: true };
     } catch (error) {
       return {
@@ -48,11 +65,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/signup', { name, email, password });
       const { user, token } = response.data.data;
-
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
-
       return { success: true };
     } catch (error) {
       return {
@@ -65,15 +80,19 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('demoMode');
     setUser(null);
+    setIsDemo(false);
   };
 
   const value = {
     user,
     loading,
     login,
+    loginDemo,
     register,
     logout,
+    isDemo,
     isAuthenticated: !!user
   };
 
