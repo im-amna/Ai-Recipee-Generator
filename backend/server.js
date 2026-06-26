@@ -14,7 +14,8 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "https://ai-recipee-generator.vercel.app",
-  /https:\/\/ai-recipee-generator-.*-im-amnas-projects\.vercel\.app/
+  "https://ai-recipee-generator-65os.vercel.app",
+  /https:\/\/ai-recipee-generator-.*\.vercel\.app/
 ];
 
 app.use(
