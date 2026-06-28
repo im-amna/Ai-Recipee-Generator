@@ -3,6 +3,7 @@
 An intelligent, full-stack web application that leverages **Google Gemini AI** to generate personalized recipes based on ingredients you already have, while helping you manage your pantry, schedule meals, and auto-generate grocery shopping lists.
 
 ---
+## 🚀 [Live Demo](https://ai-recipee-generator-65os.vercel.app) | [Try Demo — No signup needed](https://ai-recipee-generator-65os.vercel.app/login)
 
 ## 🚀 Key Features
 
