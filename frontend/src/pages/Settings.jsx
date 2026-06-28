@@ -5,12 +5,13 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { dummyUser, dummyPreferences } from '../data/dummyData';
 
 const DIETARY_OPTIONS = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Keto', 'Paleo'];
 const CUISINES = ['Any', 'Italian', 'Mexican', 'Indian', 'Chinese', 'Japanese', 'Thai', 'French', 'Mediterranean', 'American'];
 
 const Settings = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, isDemo } = useAuth();
     const navigate = useNavigate();
 
     const [saving, setSaving] = useState(false);
@@ -25,12 +26,24 @@ const Settings = () => {
         measurement_unit: 'metric'
     });
     const [passwordData, setPasswordData] = useState({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+        currentPassword: '', newPassword: '', confirmPassword: ''
     });
 
-    useEffect(() => { fetchUserData(); }, []);
+    useEffect(() => {
+        if (isDemo) {
+            setProfile({ name: dummyUser.name, email: dummyUser.email });
+            setPreferences({
+                dietary_restrictions: dummyPreferences.dietary_restrictions || [],
+                allergies: [],
+                preferred_cuisines: dummyPreferences.preferred_cuisines || [],
+                default_servings: dummyPreferences.default_servings || 4,
+                measurement_unit: dummyPreferences.measurement_unit || 'metric'
+            });
+            setLoading(false);
+        } else {
+            fetchUserData();
+        }
+    }, [isDemo]);
 
     const fetchUserData = async () => {
         try {
@@ -55,6 +68,7 @@ const Settings = () => {
 
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
+        if (isDemo) { toast.error('Demo mode — sign up to update your profile!'); return; }
         setSaving(true);
         try {
             await api.put('/users/profile', profile);
@@ -68,6 +82,7 @@ const Settings = () => {
 
     const handlePreferencesUpdate = async (e) => {
         e.preventDefault();
+        if (isDemo) { toast.error('Demo mode — sign up to save preferences!'); return; }
         setSaving(true);
         try {
             await api.put('/users/preferences', preferences);
@@ -81,18 +96,12 @@ const Settings = () => {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
-            return toast.error('Passwords do not match');
-        }
-        if (passwordData.newPassword.length < 6) {
-            return toast.error('Password must be at least 6 characters');
-        }
+        if (isDemo) { toast.error('Demo mode — sign up to change password!'); return; }
+        if (passwordData.newPassword !== passwordData.confirmPassword) return toast.error('Passwords do not match');
+        if (passwordData.newPassword.length < 6) return toast.error('Password must be at least 6 characters');
         setSaving(true);
         try {
-            await api.put('/users/password', {
-                current_password: passwordData.currentPassword,
-                new_password: passwordData.newPassword
-            });
+            await api.put('/users/password', { current_password: passwordData.currentPassword, new_password: passwordData.newPassword });
             toast.success('Password changed successfully');
             setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
         } catch {
@@ -103,6 +112,7 @@ const Settings = () => {
     };
 
     const handleDeleteAccount = async () => {
+        if (isDemo) { toast.error('Demo mode — sign up to manage your account!'); return; }
         if (!confirm('Are you sure you want to delete your account?')) return;
         const confirmation = prompt('Type "DELETE" to confirm:');
         if (confirmation !== 'DELETE') return toast.error('Cancelled');
@@ -154,7 +164,7 @@ const Settings = () => {
             <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
                 <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
 
-                {/* Profile Section */}
+                {/* Profile */}
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -168,34 +178,19 @@ const Settings = () => {
                     <form onSubmit={handleProfileUpdate} className="space-y-4">
                         <div>
                             <label className={labelClass}>Full Name</label>
-                            <input
-                                type="text"
-                                value={profile.name}
-                                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                                className={inputClass}
-                                placeholder="Your name"
-                            />
+                            <input type="text" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} className={inputClass} placeholder="Your name" />
                         </div>
                         <div>
                             <label className={labelClass}>Email</label>
-                            <input
-                                type="email"
-                                value={profile.email}
-                                disabled
-                                className={`${inputClass} bg-gray-50 text-gray-400 cursor-not-allowed`}
-                            />
+                            <input type="email" value={profile.email} disabled className={`${inputClass} bg-gray-50 text-gray-400 cursor-not-allowed`} />
                         </div>
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-                        >
+                        <button type="submit" disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50">
                             <Save className="w-4 h-4" /> Save Profile
                         </button>
                     </form>
                 </div>
 
-                {/* Password Section */}
+                {/* Password */}
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -209,45 +204,23 @@ const Settings = () => {
                     <form onSubmit={handlePasswordChange} className="space-y-4">
                         <div>
                             <label className={labelClass}>Current Password</label>
-                            <input
-                                type="password"
-                                value={passwordData.currentPassword}
-                                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                                className={inputClass}
-                                placeholder="••••••••"
-                            />
+                            <input type="password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} className={inputClass} placeholder="••••••••" />
                         </div>
                         <div>
                             <label className={labelClass}>New Password</label>
-                            <input
-                                type="password"
-                                value={passwordData.newPassword}
-                                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                                className={inputClass}
-                                placeholder="••••••••"
-                            />
+                            <input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} className={inputClass} placeholder="••••••••" />
                         </div>
                         <div>
                             <label className={labelClass}>Confirm New Password</label>
-                            <input
-                                type="password"
-                                value={passwordData.confirmPassword}
-                                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                                className={inputClass}
-                                placeholder="••••••••"
-                            />
+                            <input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} className={inputClass} placeholder="••••••••" />
                         </div>
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-                        >
+                        <button type="submit" disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50">
                             <Lock className="w-4 h-4" /> Change Password
                         </button>
                     </form>
                 </div>
 
-                {/* Preferences Section */}
+                {/* Preferences */}
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -259,87 +232,44 @@ const Settings = () => {
                         </div>
                     </div>
                     <form onSubmit={handlePreferencesUpdate} className="space-y-6">
-                        {/* Dietary Restrictions */}
                         <div>
                             <label className={labelClass}>Dietary Restrictions</label>
                             <div className="flex flex-wrap gap-2 mt-2">
                                 {DIETARY_OPTIONS.map(option => (
-                                    <button
-                                        key={option}
-                                        type="button"
-                                        onClick={() => toggleDietary(option)}
-                                        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                                            preferences.dietary_restrictions.includes(option)
-                                                ? 'bg-emerald-500 text-white border-emerald-500'
-                                                : 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400'
-                                        }`}
-                                    >
+                                    <button key={option} type="button" onClick={() => toggleDietary(option)}
+                                        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${preferences.dietary_restrictions.includes(option) ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400'}`}>
                                         {option}
                                     </button>
                                 ))}
                             </div>
                         </div>
-
-                        {/* Preferred Cuisines */}
                         <div>
                             <label className={labelClass}>Preferred Cuisines</label>
                             <div className="flex flex-wrap gap-2 mt-2">
                                 {CUISINES.map(cuisine => (
-                                    <button
-                                        key={cuisine}
-                                        type="button"
-                                        onClick={() => toggleCuisine(cuisine)}
-                                        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                                            preferences.preferred_cuisines.includes(cuisine)
-                                                ? 'bg-emerald-500 text-white border-emerald-500'
-                                                : 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400'
-                                        }`}
-                                    >
+                                    <button key={cuisine} type="button" onClick={() => toggleCuisine(cuisine)}
+                                        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${preferences.preferred_cuisines.includes(cuisine) ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400'}`}>
                                         {cuisine}
                                     </button>
                                 ))}
                             </div>
                         </div>
-
-                        {/* Default Servings */}
                         <div>
                             <label className={labelClass}>Default Servings</label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="20"
-                                value={preferences.default_servings}
-                                onChange={(e) => setPreferences({ ...preferences, default_servings: parseInt(e.target.value) })}
-                                className={`${inputClass} w-24`}
-                            />
+                            <input type="number" min="1" max="20" value={preferences.default_servings} onChange={(e) => setPreferences({ ...preferences, default_servings: parseInt(e.target.value) })} className={`${inputClass} w-24`} />
                         </div>
-
-                        {/* Measurement Unit */}
                         <div>
                             <label className={labelClass}>Measurement Unit</label>
                             <div className="flex gap-3 mt-2">
                                 {['metric', 'imperial'].map(unit => (
-                                    <button
-                                        key={unit}
-                                        type="button"
-                                        onClick={() => setPreferences({ ...preferences, measurement_unit: unit })}
-                                        className={`px-4 py-2 rounded-lg text-sm font-medium border capitalize transition-colors ${
-                                            preferences.measurement_unit === unit
-                                                ? 'bg-emerald-500 text-white border-emerald-500'
-                                                : 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400'
-                                        }`}
-                                    >
+                                    <button key={unit} type="button" onClick={() => setPreferences({ ...preferences, measurement_unit: unit })}
+                                        className={`px-4 py-2 rounded-lg text-sm font-medium border capitalize transition-colors ${preferences.measurement_unit === unit ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400'}`}>
                                         {unit}
                                     </button>
                                 ))}
                             </div>
                         </div>
-
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-                        >
+                        <button type="submit" disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50">
                             <Save className="w-4 h-4" /> Save Preferences
                         </button>
                     </form>
@@ -356,10 +286,7 @@ const Settings = () => {
                             <p className="text-sm text-gray-500">Permanently delete your account and all data</p>
                         </div>
                     </div>
-                    <button
-                        onClick={handleDeleteAccount}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
-                    >
+                    <button onClick={handleDeleteAccount} className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors">
                         <Trash2 className="w-4 h-4" /> Delete Account
                     </button>
                 </div>
